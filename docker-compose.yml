@@ -1,0 +1,17 @@
+services:
+  db:
+    image: mariadb:latest
+    container_name: mariadb_homelab
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_segura # Cámbiala luego
+      MYSQL_DATABASE: homelab_db
+    volumes:
+      - ./data/db:/var/lib/mysql
+
+  adminer:
+    image: adminer
+    container_name: adminer_gui
+    restart: always
+    ports:
+      - 8080:8080
