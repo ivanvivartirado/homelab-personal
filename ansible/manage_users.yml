@@ -1,0 +1,37 @@
+---
+- name: "Configuración Profesional de Usuarios"
+  hosts: localhost
+  become: yes
+  vars:
+    users:
+      - { name: "admin_ivan", groups: "sudo,docker", shell: "/bin/bash" }
+      - { name: "auditor_externo", groups: "", shell: "/usr/sbin/nologin" }
+
+  tasks:
+    - name: "Crear grupos de sistema"
+      ansible.builtin.group:
+        name: "{{ item }}"
+        state: present
+      loop: [ "sudo", "docker" ]
+
+    - name: "Desplegar usuarios"
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        groups: "{{ item.groups }}"
+        shell: "{{ item.shell }}"
+        state: present
+        append: yes
+      loop: "{{ users }}"
+
+    - name: "Seguridad: Desactivar login directo de Root"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: Restart SSH
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

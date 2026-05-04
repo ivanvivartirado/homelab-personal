@@ -33,3 +33,12 @@ services:
     depends_on:
       - web-core
     restart: always
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: logs-viewer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "8080:8080"
+    restart: always
