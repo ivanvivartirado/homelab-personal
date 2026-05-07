@@ -1,4 +1,12 @@
+# Carpetas de datos
 data/
+wireguard/config/*
+
+# Archivos de configuración sensible
 .env
+
+# Logs y temporales
 *.log
 
+# Excepciones
+!wireguard/config/.gitkeep

@@ -46,3 +46,21 @@ services:
     depends_on:
       - web-core
       - dozzle
+wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - SERVERURL=${MY_PUBLIC_IP}  # <--- Cambia la IP por esto exactamente
+      - SERVERPORT=51820
+    volumes:
+      - ./wireguard/config:/config
+      - /lib/modules:/lib/modules
+    ports:
+      - "51820:51820/udp"
+    restart: always
