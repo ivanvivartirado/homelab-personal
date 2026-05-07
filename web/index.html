@@ -1,13 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Nexus Core - Home Lab</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Core - Dashboard</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        h1 { border-left: 4px solid #00ff00; padding-left: 20px; }
+        /* Base y Reset */
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background-color: #0f172a; 
+            color: #f8fafc; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+
+        .container { 
+            text-align: center; 
+            width: 90%; 
+            max-width: 450px; 
+            padding: 20px;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; color: #38bdf8; }
+        p { color: #94a3b8; margin-bottom: 2rem; }
+
+        /* Estructura del Menú */
+        .menu { position: relative; width: 100%; }
+
+        .dropbtn { 
+            background-color: #0284c7; 
+            color: white; 
+            padding: 18px; 
+            font-size: 1.1rem; 
+            font-weight: 600;
+            border: none; 
+            cursor: pointer; 
+            border-radius: 12px; 
+            width: 100%; 
+            transition: background 0.3s, transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropbtn:active { transform: scale(0.98); }
+
+        .dropdown-content { 
+            display: none; 
+            background-color: #1e293b; 
+            width: 100%; 
+            margin-top: 10px; 
+            border-radius: 12px; 
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+        }
+
+        .dropdown-content a { 
+            color: #e2e8f0; 
+            padding: 16px; 
+            text-decoration: none; 
+            display: block; 
+            border-bottom: 1px solid #334155;
+            transition: background 0.2s;
+        }
+
+        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content a:hover { background-color: #334155; color: #38bdf8; }
+
+        /* Media Queries para Responsive */
+        @media (min-width: 768px) {
+            /* En PC el hover funciona bien */
+            .menu:hover .dropdown-content { display: block; }
+            .menu:hover .dropbtn { background-color: #0369a1; }
+        }
+
+        @media (max-width: 767px) {
+            /* En móviles forzamos que se vea bien al tocar */
+            .dropbtn { font-size: 1.2rem; padding: 20px; }
+            .dropdown-content a { padding: 20px; font-size: 1.1rem; }
+        }
     </style>
 </head>
 <body>
-    <h1>System Online: Nexus Core Portal</h1>
+
+    <div class="container">
+        <h1>🚀 Nexus Core</h1>
+        <p>Infraestructura Sputnik Lab</p>
+        
+        <div class="menu">
+            <button class="dropbtn" id="menuBtn">Servicios Disponibles ▾</button>
+            <div class="dropdown-content" id="dropdownMenu">
+                <a href="/dozzle/">📊 Monitorización (Dozzle)</a>
+                <a href="#">🌐 App Principal</a>
+                <a href="#">🛠️ Administración</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Script para manejar el toque en dispositivos móviles
+        const btn = document.getElementById('menuBtn');
+        const menu = document.getElementById('dropdownMenu');
+
+        btn.addEventListener('click', function(e) {
+            const isVisible = menu.style.display === 'block';
+            menu.style.display = isVisible ? 'none' : 'block';
+            e.stopPropagation();
+        });
+
+        // Cerrar menú si se toca fuera
+        document.addEventListener('click', function() {
+            menu.style.display = 'none';
+        });
+    </script>
+
 </body>
 </html>
