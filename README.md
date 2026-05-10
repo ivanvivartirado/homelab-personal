@@ -8,6 +8,9 @@
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/x1b1t0)
 
 Este repositorio contiene la configuración y automatización de **Nexus Node** (anteriormente Sputnik), una infraestructura personal diseñada bajo principios de **Infrastructure as Code (IaC)** y arquitectura de microservicios, optimizada para la seguridad y el acceso remoto cifrado.
+## 📸 Vista del Dashboard
+
+![Nexus Dashboard](web/screenshot.png)
 
 ## 🏗️ Arquitectura del Sistema
 
