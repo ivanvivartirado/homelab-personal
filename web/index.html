@@ -1,124 +1,163 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Core - Dashboard</title>
-    <style>
-        /* Base y Reset */
-        * { box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-            background-color: #0f172a; 
-            color: #f8fafc; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh;
-        }
-
-        .container { 
-            text-align: center; 
-            width: 90%; 
-            max-width: 450px; 
-            padding: 20px;
-        }
-
-        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; color: #38bdf8; }
-        p { color: #94a3b8; margin-bottom: 2rem; }
-
-        /* Estructura del Menú */
-        .menu { position: relative; width: 100%; }
-
-        .dropbtn { 
-            background-color: #0284c7; 
-            color: white; 
-            padding: 18px; 
-            font-size: 1.1rem; 
-            font-weight: 600;
-            border: none; 
-            cursor: pointer; 
-            border-radius: 12px; 
-            width: 100%; 
-            transition: background 0.3s, transform 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .dropbtn:active { transform: scale(0.98); }
-
-        .dropdown-content { 
-            display: none; 
-            background-color: #1e293b; 
-            width: 100%; 
-            margin-top: 10px; 
-            border-radius: 12px; 
-            overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            border: 1px solid #334155;
-        }
-
-        .dropdown-content a { 
-            color: #e2e8f0; 
-            padding: 16px; 
-            text-decoration: none; 
-            display: block; 
-            border-bottom: 1px solid #334155;
-            transition: background 0.2s;
-        }
-
-        .dropdown-content a:last-child { border-bottom: none; }
-        .dropdown-content a:hover { background-color: #334155; color: #38bdf8; }
-
-        /* Media Queries para Responsive */
-        @media (min-width: 768px) {
-            /* En PC el hover funciona bien */
-            .menu:hover .dropdown-content { display: block; }
-            .menu:hover .dropbtn { background-color: #0369a1; }
-        }
-
-        @media (max-width: 767px) {
-            /* En móviles forzamos que se vea bien al tocar */
-            .dropbtn { font-size: 1.2rem; padding: 20px; }
-            .dropdown-content a { padding: 20px; font-size: 1.1rem; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus Node</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
+    .header { padding: 2rem 1.5rem 1rem; border-bottom: 1px solid #21262d; margin-bottom: 1.5rem; }
+    .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #3fb950; flex-shrink: 0; }
+    .hostname { font-size: 22px; font-weight: 500; }
+    .subtitle { font-size: 14px; color: #8b949e; padding-left: 20px; }
+    .section { padding: 0 1.5rem 1.5rem; }
+    .section-title { font-size: 12px; font-weight: 500; color: #8b949e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .metric { background: #161b22; border-radius: 8px; padding: 14px 16px; }
+    .metric-label { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
+    .metric-value { font-size: 20px; font-weight: 500; }
+    .metric-sub { font-size: 11px; color: #6e7681; margin-top: 2px; }
+    .service-card { background: #0d1117; border: 1px solid #21262d; border-radius: 12px; padding: 1rem 1.25rem; transition: border-color 0.15s, transform 0.1s; cursor: pointer; }
+    .service-card:hover { border-color: #388bfd; transform: translateY(-2px); }
+    .service-card:active { transform: translateY(0); }
+    .service-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .service-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .badge { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 8px; }
+    .badge-up { background: #1a3a2a; color: #3fb950; }
+    .badge-vpn { background: #1a2d4a; color: #58a6ff; }
+    .badge-db { background: #2d1f4a; color: #a371f7; }
+    .service-name { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+    .service-desc { font-size: 12px; color: #8b949e; }
+    .service-port { font-size: 11px; color: #6e7681; margin-top: 8px; font-family: monospace; }
+    .about { background: #0d1117; border: 1px solid #21262d; border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 16px; }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; background: #1a2d4a; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 15px; color: #58a6ff; flex-shrink: 0; }
+    .about-name { font-size: 15px; font-weight: 500; }
+    .about-nick { font-size: 13px; color: #8b949e; }
+    .about-links { display: flex; gap: 8px; margin-top: 8px; }
+    .link-btn { font-size: 12px; color: #8b949e; border: 1px solid #21262d; border-radius: 8px; padding: 4px 10px; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .link-btn:hover { border-color: #388bfd; color: #e6edf3; }
+    .icon-blue { background: #1a2d4a; color: #58a6ff; }
+    .icon-green { background: #1a3a2a; color: #3fb950; }
+    .icon-purple { background: #2d1f4a; color: #a371f7; }
+    .icon-amber { background: #3a2a0a; color: #d29922; }
+    .icon-teal { background: #0a2a2a; color: #39d353; }
+    @media (max-width: 600px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>🚀 Nexus Core</h1>
-        <p>Infraestructura Sputnik Lab</p>
-        
-        <div class="menu">
-            <button class="dropbtn" id="menuBtn">Servicios Disponibles ▾</button>
-            <div class="dropdown-content" id="dropdownMenu">
-                <a href="/dozzle/">📊 Monitorización (Dozzle)</a>
-                <a href="#">🌐 App Principal</a>
-                <a href="#">🛠️ Administración</a>
-            </div>
-        </div>
+<div class="header">
+  <div class="header-top">
+    <div class="status-dot"></div>
+    <span class="hostname">Nexus Node</span>
+  </div>
+  <div class="subtitle">192.168.0.105 · Ubuntu Noble · Docker Compose V2</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Sistema</div>
+  <div class="grid-4">
+    <div class="metric">
+      <div class="metric-label">Hostname</div>
+      <div class="metric-value" style="font-size:16px;">nexus</div>
     </div>
+    <div class="metric">
+      <div class="metric-label">IP estática</div>
+      <div class="metric-value" style="font-size:14px; font-family:monospace;">192.168.0.105</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Servicios activos</div>
+      <div class="metric-value">5</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">VPN</div>
+      <div class="metric-value" style="font-size:14px;">WireGuard</div>
+      <div class="metric-sub">UDP 51820</div>
+    </div>
+  </div>
+</div>
 
-    <script>
-        // Script para manejar el toque en dispositivos móviles
-        const btn = document.getElementById('menuBtn');
-        const menu = document.getElementById('dropdownMenu');
+<div class="section">
+  <div class="section-title">Servicios</div>
+  <div class="grid-3">
+    <div class="service-card" onclick="window.open('http://192.168.0.105:80', '_blank')">
+      <div class="service-top">
+        <div class="service-icon icon-blue"><i class="ti ti-server"></i></div>
+        <span class="badge badge-up">online</span>
+      </div>
+      <div class="service-name">Nginx</div>
+      <div class="service-desc">Gateway y portal principal</div>
+      <div class="service-port">:80</div>
+    </div>
+    <div class="service-card" onclick="window.open('http://192.168.0.105:51821', '_blank')">
+      <div class="service-top">
+        <div class="service-icon icon-blue"><i class="ti ti-lock"></i></div>
+        <span class="badge badge-vpn">cifrado</span>
+      </div>
+      <div class="service-name">WireGuard</div>
+      <div class="service-desc">VPN para acceso remoto seguro</div>
+      <div class="service-port">:51820 UDP</div>
+    </div>
+    <div class="service-card" onclick="window.open('http://192.168.0.105:8888', '_blank')">
+      <div class="service-top">
+        <div class="service-icon icon-green"><i class="ti ti-activity"></i></div>
+        <span class="badge badge-up">online</span>
+      </div>
+      <div class="service-name">Dozzle</div>
+      <div class="service-desc">Monitorización de logs en tiempo real</div>
+      <div class="service-port">:8888</div>
+    </div>
+    <div class="service-card" style="cursor:default;">
+      <div class="service-top">
+        <div class="service-icon icon-purple"><i class="ti ti-database"></i></div>
+        <span class="badge badge-db">interno</span>
+      </div>
+      <div class="service-name">MariaDB</div>
+      <div class="service-desc">Base de datos relacional</div>
+      <div class="service-port">interno</div>
+    </div>
+    <div class="service-card" onclick="window.open('http://192.168.0.105:8080', '_blank')">
+      <div class="service-top">
+        <div class="service-icon icon-amber"><i class="ti ti-table"></i></div>
+        <span class="badge badge-up">online</span>
+      </div>
+      <div class="service-name">Adminer</div>
+      <div class="service-desc">Gestión visual de base de datos</div>
+      <div class="service-port">:8080</div>
+    </div>
+    <div class="service-card" onclick="window.open('http://192.168.0.105:80', '_blank')">
+      <div class="service-top">
+        <div class="service-icon icon-teal"><i class="ti ti-terminal"></i></div>
+        <span class="badge badge-up">online</span>
+      </div>
+      <div class="service-name">Web-Core</div>
+      <div class="service-desc">Dashboard y CV profesional</div>
+      <div class="service-port">:80</div>
+    </div>
+  </div>
+</div>
 
-        btn.addEventListener('click', function(e) {
-            const isVisible = menu.style.display === 'block';
-            menu.style.display = isVisible ? 'none' : 'block';
-            e.stopPropagation();
-        });
-
-        // Cerrar menú si se toca fuera
-        document.addEventListener('click', function() {
-            menu.style.display = 'none';
-        });
-    </script>
+<div class="section">
+  <div class="section-title">Administrador</div>
+  <div class="about">
+    <div class="avatar">IV</div>
+    <div>
+      <div class="about-name">Ivan Vivar</div>
+      <div class="about-nick">x1b1t0</div>
+      <div class="about-links">
+        <a class="link-btn" href="https://github.com/x1b1t0" target="_blank"><i class="ti ti-brand-github"></i> GitHub</a>
+        <a class="link-btn" href="https://www.linkedin.com/in/ivan-vivar-tirado-354445335/" target="_blank"><i class="ti ti-brand-linkedin"></i> LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
