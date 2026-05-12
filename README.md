@@ -6,7 +6,7 @@
 ![WireGuard](https://img.shields.io/badge/WireGuard-88171A?style=for-the-badge&logo=wireguard&logoColor=white)
 [![LinkedIn](https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ivan-vivar-tirado-354445335/)
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/x1b1t0)
-[![Portfolio](https://img.shields.io/badge/Portfolio-0ea5e9?style=flat-square&logo=githubpages)](https://ivanvivartirado.github.io)
+[![Portfolio](https://img.shields.io/badge/Portfolio-ivanvivartirado.github.io-0ea5e9?style=flat-square&logo=github)](https://ivanvivartirado.github.io)
 
 Este repositorio contiene la configuración y automatización de **Nexus Node** (anteriormente Sputnik), una infraestructura personal diseñada bajo principios de **Infrastructure as Code (IaC)** y arquitectura de microservicios, optimizada para la seguridad y el acceso remoto cifrado.
 ## 📸 Vista del Dashboard
