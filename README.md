@@ -4,6 +4,7 @@
 ![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 ![WireGuard](https://img.shields.io/badge/WireGuard-88171A?style=for-the-badge&logo=wireguard&logoColor=white)
+![Fail2ban](https://img.shields.io/badge/Fail2ban-EF3B2D?style=for-the-badge&logo=linux&logoColor=white)
 [![LinkedIn](https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ivan-vivar-tirado-354445335/)
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/x1b1t0)
 [![Portfolio](https://img.shields.io/badge/Portfolio-ivanvivartirado.github.io-0ea5e9?style=flat-square&logo=github)](https://ivanvivartirado.github.io)
@@ -35,9 +36,19 @@ Utilizo un modelo de arquitectura distribuida para garantizar la observabilidad 
 ## 🛡️ Seguridad y Hardening
 
 La infraestructura ha sido securizada siguiendo estándares de administración de sistemas:
+
 - **Gestión de Identidades:** Migración de usuarios genéricos a cuenta administrativa dedicada `admin` con privilegios `sudo`.
 - **Network Hardening:** Implementación de IP estática y DNS redundante (Google DNS) para evitar pérdida de conectividad.
 - **Acceso Cifrado:** Uso de llaves SSH (`ed25519`) para autenticación sin contraseña y túnel VPN para administración remota.
+- **Fail2ban:** Protección activa contra fuerza bruta en SSH. Config en `/etc/fail2ban/jail.local` (instalado en el host, no como contenedor).
+
+### Jails activas
+
+| Jail | Protege | maxretry | bantime |
+|------|---------|----------|---------|
+| `sshd` | Puerto 22 / SSH | 3 intentos | 24h |
+
+> 🔒 Las IPs de la LAN (`192.168.0.0/24`) y del túnel WireGuard (`10.13.13.0/24`) están en la lista blanca y nunca serán baneadas.
 
 ## 📁 Estructura del Proyecto
 
@@ -50,11 +61,14 @@ La infraestructura ha sido securizada siguiendo estándares de administración d
 ├── docker-compose.yml        # Orquestación V2 de contenedores
 ├── .gitignore                # Protección de secretos y configs locales
 └── README.md                 # Documentación del proyecto
+```
+
 ## 🚀 Cómo desplegar el entorno
 
 Sigue estos pasos para poner en marcha el nodo desde una instalación limpia de Ubuntu Server.
 
 ### 1. Preparación del Sistema
+
 Antes de levantar los servicios, es necesario identificar la máquina en la red y asegurar una dirección IP persistente para evitar la rotura de enlaces y túneles VPN:
 
 ```bash
@@ -63,15 +77,28 @@ sudo hostnamectl set-hostname nexus
 
 # Configurar Netplan para IP estática (192.168.0.105)
 sudo netplan apply
+```
 
-2. Despliegue de Infraestructura
+### 2. Instalar Fail2ban
+
+```bash
+sudo apt update && sudo apt install fail2ban -y
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+```
+
+### 3. Despliegue de Infraestructura
+
 Utilizamos Docker Compose V2 para la orquestación. Gracias a la estructura de microservicios, el despliegue es atómico e independiente:
 
-	# Entrar al directorio del proyecto (Alias recomendado: hl)
+```bash
+# Entrar al directorio del proyecto (Alias recomendado: hl)
 cd ~/mi-homelab
 
 # Levantar todos los servicios en segundo plano
 docker compose up -d
+```
 
-Nexus Node - Administrado por Ivan Vivar (x1b1t0)
+---
 
+*Nexus Node - Administrado por Ivan Vivar (x1b1t0)*
