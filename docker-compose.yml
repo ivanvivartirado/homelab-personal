@@ -29,11 +29,10 @@ services:
     image: amir20/dozzle:latest
     container_name: dozzle
     restart: always
-    environment:
-      - DOZZLE_BASE=/dozzle
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
+    ports:
+      - "8888:8080"
   gateway:
     image: nginx:alpine
     container_name: gateway
