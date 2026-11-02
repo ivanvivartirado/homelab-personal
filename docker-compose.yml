@@ -4,10 +4,9 @@ services:
     container_name: mariadb_homelab
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root_password_segura
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en .env}
       MYSQL_DATABASE: homelab_db
-    ports:
-      - "3306:3306"
+    # Sin puerto publicado: solo Adminer y Uptime Kuma llegan por la red interna de Docker (db:3306)
     volumes:
       - ./data/db:/var/lib/mysql
 
@@ -31,8 +30,12 @@ services:
     image: amir20/dozzle:latest
     container_name: dozzle
     restart: always
+    environment:
+      # Login obligatorio; usuarios en data/dozzle/users.yml (fuera de Git)
+      - DOZZLE_AUTH_PROVIDER=simple
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/dozzle:/data
     ports:
       - "8888:8080"
   gateway:

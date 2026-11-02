@@ -6,7 +6,7 @@
 ![WireGuard](https://img.shields.io/badge/WireGuard-88171A?style=for-the-badge&logo=wireguard&logoColor=white)
 ![Fail2ban](https://img.shields.io/badge/Fail2ban-EF3B2D?style=for-the-badge&logo=linux&logoColor=white)
 ![Uptime Kuma](https://img.shields.io/badge/Uptime%20Kuma-5CDD8B?style=for-the-badge&logo=uptimekuma&logoColor=white)
-[![LinkedIn](https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ivan-vivar-tirado-354445335/)
+[![LinkedIn](https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ivanvivartirado/)
 [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/x1b1t0)
 [![Portfolio](https://img.shields.io/badge/Portfolio-ivanvivartirado.github.io-0ea5e9?style=flat-square&logo=github)](https://ivanvivartirado.github.io)
 
@@ -34,8 +34,8 @@ Utilizo un modelo de arquitectura distribuida para garantizar la observabilidad 
 | **Gateway (Nginx)** | Punto de entrada principal y reverse proxy | 80 |
 | **Web-Core** | Dashboard de control y CV profesional | interno |
 | **WireGuard** | Servidor VPN para acceso remoto seguro | 51820/UDP |
-| **Dozzle** | Monitorización de logs en tiempo real | 8888 |
-| **MariaDB** | Base de datos relacional | 3306 |
+| **Dozzle** | Monitorización de logs en tiempo real (con login) | 8888 |
+| **MariaDB** | Base de datos relacional | interno |
 | **Adminer** | Gestión visual de base de datos | 8080 |
 | **Uptime Kuma** | Monitorización de servicios y uptime | 3001 |
 | **Fail2ban** | Protección contra fuerza bruta (contenedor) | — |
@@ -48,6 +48,9 @@ La infraestructura ha sido securizada siguiendo estándares de administración d
 - **Network Hardening:** Implementación de IP estática y DNS redundante (Google DNS) para evitar pérdida de conectividad.
 - **Acceso Cifrado:** Uso de llaves SSH (`ed25519`) para autenticación sin contraseña y túnel VPN para administración remota.
 - **Fail2ban:** Protección activa contra fuerza bruta desplegada como contenedor Docker.
+- **Secretos fuera del repo:** las contraseñas viven en un `.env` que no se sube a Git (plantilla en `.env.example`).
+- **Superficie mínima:** MariaDB no publica puerto; solo se llega a ella desde la red interna de Docker.
+- **Dozzle con login:** tiene acceso al socket de Docker (solo lectura), así que pide usuario y contraseña.
 
 ### Jails activas
 
@@ -85,6 +88,7 @@ La infraestructura ha sido securizada siguiendo estándares de administración d
 │   └── index.html            # Portal principal (Nexus Core)
 ├── wireguard/                # Configuración de túneles y llaves VPN
 ├── docker-compose.yml        # Orquestación V2 de contenedores
+├── .env.example              # Plantilla de variables (el .env real no se sube)
 ├── .gitignore                # Protección de secretos y configs locales
 └── README.md                 # Documentación del proyecto
 ```
@@ -106,6 +110,14 @@ sudo netplan apply
 ```bash
 # Entrar al directorio del proyecto
 cd ~/mi-homelab
+
+# Crear el .env con las contraseñas (no se sube a Git)
+cp .env.example .env
+nano .env
+
+# Crear el usuario de Dozzle
+mkdir -p data/dozzle
+docker run --rm amir20/dozzle generate admin --password 'TU_CONTRASEÑA' --name Ivan > data/dozzle/users.yml
 
 # Levantar todos los servicios en segundo plano
 docker compose up -d
