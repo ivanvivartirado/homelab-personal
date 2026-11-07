@@ -8,6 +8,12 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    # Un salto de versión mayor migra los datos y no tiene vuelta atrás: se hace a mano, con copia antes
+    ignore:
+      - dependency-name: mariadb
+        update-types: ["version-update:semver-major"]
+      - dependency-name: louislam/uptime-kuma
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
