@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar docker-compose.yml
+        env:
+          MYSQL_ROOT_PASSWORD: solo-para-ci
+          MY_PUBLIC_IP: 127.0.0.1
+        run: docker compose config --quiet
+
+      - name: Revisar scripts de shell (ShellCheck)
+        run: shellcheck scripts/crear_usuario.sh scripts/kuma
+
+      - name: Comprobar que el script de Python compila
+        run: python3 -m py_compile scripts/kuma_status.py
+
+      - name: Buscar secretos (Gitleaks)
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2 dir /repo --config /repo/.gitleaks.toml --redact --verbose

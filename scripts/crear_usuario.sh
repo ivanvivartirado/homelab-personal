@@ -9,17 +9,17 @@ fi
 echo "--- Gestión de Usuarios: Nexus Core ---"
 
 # 1. Nombre de usuario
-read -p "Nombre de usuario: " NUEVO_USER
+read -rp "Nombre de usuario: " NUEVO_USER
 if id "$NUEVO_USER" &>/dev/null; then
     echo "Error: El usuario '$NUEVO_USER' ya existe."
     exit 1
 fi
 
 # 2. Grupo
-read -p "Grupo secundario (deja en blanco para ninguno): " GRUPO
+read -rp "Grupo secundario (deja en blanco para ninguno): " GRUPO
 
 # 3. Contraseña
-read -sp "Contraseña para $NUEVO_USER: " PASSWORD
+read -rsp "Contraseña para $NUEVO_USER: " PASSWORD
 echo -e "\n"
 
 # --- Ejecución ---

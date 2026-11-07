@@ -7,8 +7,11 @@
 ![Fail2ban](https://img.shields.io/badge/Fail2ban-EF3B2D?style=for-the-badge&logo=linux&logoColor=white)
 ![Uptime Kuma](https://img.shields.io/badge/Uptime%20Kuma-5CDD8B?style=for-the-badge&logo=uptimekuma&logoColor=white)
 [![LinkedIn](https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ivanvivartirado/)
-[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/x1b1t0)
+[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ivanvivartirado)
 [![Portfolio](https://img.shields.io/badge/Portfolio-ivanvivartirado.github.io-0ea5e9?style=flat-square&logo=github)](https://ivanvivartirado.github.io)
+[![CI](https://github.com/ivanvivartirado/nexus-node/actions/workflows/ci.yml/badge.svg)](https://github.com/ivanvivartirado/nexus-node/actions/workflows/ci.yml)
+
+**Web del proyecto:** [ivanvivartirado.github.io/nexus-node](https://ivanvivartirado.github.io/nexus-node) (arquitectura, auditoría de seguridad y decisiones técnicas)
 
 Este repositorio contiene la configuración y automatización de **Nexus Node**, una infraestructura personal diseñada bajo principios de **Infrastructure as Code (IaC)** y arquitectura de microservicios, optimizada para la seguridad y el acceso remoto cifrado.
 
@@ -50,7 +53,8 @@ La infraestructura ha sido securizada siguiendo estándares de administración d
 - **Fail2ban:** Protección activa contra fuerza bruta desplegada como contenedor Docker.
 - **Secretos fuera del repo:** las contraseñas viven en un `.env` que no se sube a Git (plantilla en `.env.example`).
 - **Superficie mínima:** MariaDB no publica puerto; solo se llega a ella desde la red interna de Docker.
-- **Dozzle con login:** tiene acceso al socket de Docker (solo lectura), así que pide usuario y contraseña.
+- **Dozzle con login:** tiene acceso al socket de Docker, que equivale a controlar la máquina (montarlo como `:ro` no limita la API), así que pide usuario y contraseña.
+- **Revisión automática:** cada push pasa por GitHub Actions: valida el `docker-compose.yml`, revisa los scripts con ShellCheck y busca secretos con Gitleaks.
 
 ### Jails activas
 
@@ -74,6 +78,7 @@ La infraestructura ha sido securizada siguiendo estándares de administración d
 
 ```bash
 .
+├── .github/workflows/ci.yml  # CI: Compose, ShellCheck y Gitleaks
 ├── ansible/                  # Playbooks de automatización
 │   └── manage_users.yml
 ├── fail2ban/                 # Configuración de Fail2ban
@@ -87,9 +92,11 @@ La infraestructura ha sido securizada siguiendo estándares de administración d
 ├── web/
 │   └── index.html            # Portal principal (Nexus Core)
 ├── wireguard/                # Configuración de túneles y llaves VPN
+├── docs/                     # Web del proyecto (GitHub Pages)
 ├── docker-compose.yml        # Orquestación V2 de contenedores
 ├── .env.example              # Plantilla de variables (el .env real no se sube)
 ├── .gitignore                # Protección de secretos y configs locales
+├── .gitleaks.toml            # Reglas del escáner de secretos
 └── README.md                 # Documentación del proyecto
 ```
 

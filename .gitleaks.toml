@@ -1,0 +1,7 @@
+# Reglas por defecto de Gitleaks
+[extend]
+useDefault = true
+
+[allowlist]
+description = "La web enseña a propósito la contraseña antigua (ya cambiada) en la sección de auditoría"
+paths = ['''docs/index\.html''']

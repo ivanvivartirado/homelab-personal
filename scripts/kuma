@@ -1,4 +1,5 @@
 #!/bin/bash
-cd ~/mi-homelab/scripts
+cd ~/mi-homelab/scripts || exit 1
+# shellcheck source=/dev/null
 source ~/mi-homelab/venv/bin/activate
 python3 kuma_status.py

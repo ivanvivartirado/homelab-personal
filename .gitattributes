@@ -1,0 +1,5 @@
+# Los scripts se ejecutan en Linux: siempre con finales de línea LF
+*.sh text eol=lf
+scripts/kuma text eol=lf
+*.yml text eol=lf
+*.conf text eol=lf

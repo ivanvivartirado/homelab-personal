@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus Node · el homelab de Ivan Vivar Tirado</title>
+<meta name="description" content="Nexus Node: un servidor casero con ocho servicios en Docker Compose, administración solo por VPN WireGuard y una auditoría de seguridad propia, con los fallos a la vista.">
+<meta property="og:title" content="Nexus Node">
+<meta property="og:description" content="Ocho servicios en Docker Compose, una sola puerta a internet y una auditoría propia.">
+<meta property="og:image" content="https://ivanvivartirado.github.io/nexus-node/img/og.png">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0f1110">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#0f1110; --step:#171a18; --step2:#20241f; --ink:#ecebe4; --soft:#b4b8b0;
+  --accent:#5cdd8b; --accent-ink:#0b1a10; --alarm:#ff7a5c;
+  --text:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --code:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --m:clamp(16px,3vw,32px); --gap:clamp(120px,14vw,200px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--text);font-size:18px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img,svg{display:block;max-width:100%}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+::selection{background:var(--accent);color:var(--accent-ink)}
+.wrap{max-width:1440px;margin:0 auto;padding-inline:var(--m)}
+h1,h2,h3{margin:0;font-weight:800;font-stretch:112%;letter-spacing:-.035em;line-height:.95}
+h2{font-size:clamp(2.2rem,4.4vw,4.2rem);max-width:20ch}
+h3{font-size:1.35rem;letter-spacing:-.015em;line-height:1.15;font-stretch:100%}
+p{margin:0}
+.lead{font-size:clamp(1.2rem,2vw,1.6rem);line-height:1.35;max-width:34ch}
+.body{max-width:60ch}
+.soft{color:var(--soft)}
+section{padding-top:var(--gap)}
+
+/* barra */
+.bar{position:sticky;top:0;z-index:10;background:var(--ground)}
+.bar .wrap{display:flex;align-items:center;gap:28px;min-height:64px}
+.mark{font-weight:800;font-stretch:112%;letter-spacing:-.02em;text-decoration:none;font-size:1.1rem;margin-right:auto}
+.mark b{color:var(--accent)}
+.bar nav{display:flex;gap:24px}
+.bar nav a{text-decoration:none;color:var(--soft);font-weight:500;transition:color .2s}
+.bar nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:.5em;background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none;padding:.8em 1.3em;border-radius:0;transition:transform .15s ease,background .2s}
+.btn:hover{background:#7fe9a4}
+.btn:active{transform:translateY(1px) scale(.98)}
+.link{font-weight:600;text-decoration-thickness:2px;text-underline-offset:5px;text-decoration-color:var(--accent)}
+.link:hover{color:var(--accent)}
+
+/* portada */
+.hero{padding-top:clamp(40px,7vw,96px)}
+.hero h1{font-size:clamp(2.6rem,10.4vw,10.6rem);font-stretch:125%;letter-spacing:-.055em;line-height:.82;white-space:nowrap}
+.hero-row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:var(--m);align-items:end;margin-top:clamp(28px,4vw,56px)}
+.hero-row .acts{display:flex;flex-wrap:wrap;gap:20px 28px;align-items:center;justify-content:flex-end}
+.facts{display:flex;flex-wrap:wrap;gap:8px 32px;margin-top:28px;font-weight:600}
+.facts .f{white-space:nowrap}
+.facts .f span{color:var(--soft);font-weight:400;margin-left:.3em}
+.shot{margin-top:clamp(40px,6vw,80px);background:var(--step);overflow:hidden}
+.shot img{width:100%;height:auto;transform-origin:50% 0}
+.cap{margin-top:12px;font-size:.95rem;color:var(--soft)}
+
+/* servicios */
+.split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--m) calc(var(--m)*2);align-items:start}
+.split .side{position:sticky;top:96px;display:grid;gap:24px}
+.split .wide{grid-column:1/-1;margin-bottom:clamp(16px,3vw,40px)}
+table{width:100%;border-collapse:collapse;font-size:1rem}
+th{text-align:left;font-weight:600;color:var(--soft);padding:0 16px 12px 0;font-size:.95rem}
+td{padding:16px 16px 16px 0;border-top:1px solid #2a2e29;vertical-align:top}
+td:first-child{font-weight:700;width:32%}
+td:first-child code{overflow-wrap:anywhere}
+td code{font-family:var(--code);font-size:.85rem;color:var(--soft)}
+.who{white-space:nowrap}
+.dot{display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-right:.45em;vertical-align:.05em;background:var(--soft)}
+.dot.net{background:var(--accent)}
+.dot.lan{background:#e2c35b}
+.dot.in{background:#5a6058}
+
+/* arquitectura */
+.field{background:var(--step);margin-top:var(--gap);padding-block:clamp(72px,9vw,140px)}
+.field section{padding-top:0}
+.arch-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--m);align-items:end;margin-bottom:clamp(40px,5vw,72px)}
+.diagram{width:100%;height:auto}
+.diagram text{font-family:var(--text);fill:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:28px;color:var(--soft);font-size:1rem}
+
+/* auditoria */
+.audit-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--m);align-items:end}
+.toggle{display:inline-flex;background:var(--step);padding:6px;margin-top:48px}
+input[name=estado]{position:absolute;opacity:0;pointer-events:none}
+.toggle label{padding:.7em 1.4em;font-weight:700;cursor:pointer;color:var(--soft);transition:background .2s,color .2s}
+.toggle label:hover{color:var(--ink)}
+#antes:checked~.toggle label[for=antes]{background:var(--alarm);color:#1d0b06}
+#despues:checked~.toggle label[for=despues]{background:var(--accent);color:var(--accent-ink)}
+#antes:focus-visible~.toggle label[for=antes],#despues:focus-visible~.toggle label[for=despues]{outline:3px solid var(--ink);outline-offset:2px}
+.state{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--m);margin-top:24px}
+.panel{background:var(--step);padding:clamp(20px,3vw,36px)}
+.big{font-size:clamp(3rem,7vw,6rem);font-weight:800;font-stretch:120%;letter-spacing:-.05em;line-height:.9}
+.ports{list-style:none;margin:28px 0 0;padding:0;display:grid;gap:14px;font-size:1.05rem}
+.ports li{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:12px}
+.ports b{font-variant-numeric:tabular-nums}
+.bad{color:var(--alarm);font-weight:700}
+.ok{color:var(--accent);font-weight:700}
+pre{margin:0;font-family:var(--code);font-size:.86rem;line-height:1.65;overflow-x:auto;background:#0a0b0a;padding:clamp(18px,2.4vw,28px);color:#d5d8d1}
+pre .del{color:var(--alarm)}
+pre .add{color:var(--accent)}
+pre .com{color:#7d8479}
+.v-antes,.v-despues{display:none}
+#antes:checked~.state .v-antes,#despues:checked~.state .v-despues{display:block}
+#antes:checked~.state span.v-antes,#despues:checked~.state span.v-despues{display:inline}
+.fixes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--m);margin-top:clamp(56px,7vw,96px)}
+.fixes h3{margin-bottom:12px}
+.fixes p+p{margin-top:12px}
+.note{margin-top:clamp(48px,6vw,80px);font-size:clamp(1.4rem,2.6vw,2.1rem);line-height:1.25;font-weight:600;max-width:30ch;letter-spacing:-.015em}
+
+/* decisiones */
+.qa{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px var(--m);margin-top:clamp(48px,6vw,80px)}
+.qa h3{font-size:clamp(1.4rem,2.2vw,1.9rem);margin-bottom:14px;max-width:22ch}
+
+/* despliegue */
+.deploy{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--m) calc(var(--m)*2);align-items:start}
+.deploy .body+.body{margin-top:16px}
+
+/* pendientes */
+.todo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--m);margin-top:48px}
+.todo div{background:var(--step);padding:28px}
+.todo h3{margin-bottom:10px}
+
+/* cierre */
+footer{margin-top:var(--gap);background:var(--accent);color:var(--accent-ink);padding-block:clamp(64px,8vw,120px) 40px}
+footer .who-name{font-size:clamp(3rem,11vw,10.5rem);font-weight:800;font-stretch:118%;letter-spacing:-.05em;line-height:.85}
+footer .row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;margin-top:40px;font-weight:600}
+footer nav{display:flex;flex-wrap:wrap;gap:12px 28px}
+footer a{text-underline-offset:5px}
+
+/* movimiento */
+.js .rise{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--i,0)*80ms)}
+.js .rise.in{opacity:1;transform:none}
+.diagram .flow{stroke-dasharray:6 8;animation:flow 1.6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-28}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .js .rise{opacity:1;transform:none;transition:none}
+  .diagram .flow{animation:none}
+  .shot img{transform:none!important}
+}
+
+/* movil */
+@media (max-width:900px){
+  .bar nav{display:none}
+  .hero-row,.split,.arch-head,.audit-head,.state,.qa,.deploy,.todo{grid-template-columns:minmax(0,1fr)}
+  .hero-row .acts{justify-content:flex-start}
+  .split .side{position:static}
+  .fixes{grid-template-columns:minmax(0,1fr);gap:40px}
+  .tbl{overflow-x:auto}
+  table{min-width:620px}
+  .shot img{aspect-ratio:4/3;object-fit:cover;object-position:left top}
+}
+@media (max-width:520px){
+  body{font-size:17px}
+  .bar .btn{padding:.6em .9em;font-size:.95rem}
+  .toggle{display:flex}
+  .toggle label{flex:1;text-align:center;padding:.7em .6em}
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="mark" href="#top">Nexus <b>Node</b></a>
+    <nav aria-label="Secciones">
+      <a href="#servicios">Servicios</a>
+      <a href="#arquitectura">Arquitectura</a>
+      <a href="#auditoria">Auditoría</a>
+      <a href="#despliegue">Despliegue</a>
+    </nav>
+    <a class="btn" href="https://github.com/ivanvivartirado/nexus-node">Código en GitHub</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <h1 class="rise">Nexus Node</h1>
+    <div class="hero-row">
+      <div>
+        <p class="lead rise" style="--i:1">Mi servidor en casa: ocho servicios en Docker Compose, una sola puerta a internet y una auditoría que me hice a mí mismo, con los fallos a la vista.</p>
+        <p class="facts rise" style="--i:2"><span class="f">Ubuntu 24.04 <span>sistema</span></span><span class="f">Docker Compose V2 <span>orquestación</span></span><span class="f">WireGuard <span>acceso remoto</span></span></p>
+      </div>
+      <div class="acts rise" style="--i:3">
+        <a class="link" href="#auditoria">Ver la auditoría</a>
+        <a class="btn" href="https://github.com/ivanvivartirado/nexus-node">Ver el código</a>
+      </div>
+    </div>
+    <figure class="shot rise" style="--i:4;margin-inline:0;margin-bottom:0">
+      <img id="panel" src="img/panel.png" width="1919" height="749" alt="Panel de Nexus Node en el navegador: hostname nexus, IP 192.168.0.105, WireGuard en UDP 51820 y las tarjetas de Nginx, WireGuard, Dozzle, MariaDB, Adminer y Web-Core.">
+    </figure>
+    <p class="cap">El panel que sirve el propio servidor en la red de casa. No está publicado en internet: esto es una captura.</p>
+  </div>
+
+  <section id="servicios" class="wrap split">
+    <h2 class="rise wide">Ocho servicios, un archivo</h2>
+    <div class="side">
+      <p class="body rise" style="--i:1">Todo el servidor está descrito en un único <code>docker-compose.yml</code> versionado en Git. Cada cambio queda registrado y se puede deshacer, y la configuración entera se levanta con un comando.</p>
+      <p class="body rise soft" style="--i:2">Los datos (base de datos, monitorización, usuarios de Dozzle) viven en <code>./data</code>, fuera del repositorio.</p>
+    </div>
+    <div class="tbl rise" style="--i:1">
+      <table>
+        <thead><tr><th scope="col">Servicio</th><th scope="col">Para qué sirve</th><th scope="col">Quién llega</th></tr></thead>
+        <tbody>
+          <tr><td>WireGuard<br><code>linuxserver/wireguard</code></td><td>VPN para administrar el servidor desde fuera de casa.</td><td class="who"><span class="dot net"></span>Internet, 51820/UDP</td></tr>
+          <tr><td>Gateway<br><code>nginx:alpine</code></td><td>Punto de entrada y proxy inverso hacia el panel y Dozzle.</td><td class="who"><span class="dot lan"></span>Red de casa, 80</td></tr>
+          <tr><td>Web-Core<br><code>nginx:alpine</code></td><td>Sirve el panel de control que ves arriba.</td><td class="who"><span class="dot in"></span>Solo red de Docker</td></tr>
+          <tr><td>Dozzle<br><code>amir20/dozzle</code></td><td>Logs de todos los contenedores en directo, con usuario y contraseña.</td><td class="who"><span class="dot lan"></span>Red de casa, 8888</td></tr>
+          <tr><td>MariaDB<br><code>mariadb</code></td><td>Base de datos relacional del laboratorio.</td><td class="who"><span class="dot in"></span>Solo red de Docker</td></tr>
+          <tr><td>Adminer<br><code>adminer</code></td><td>Gestión de la base de datos desde el navegador.</td><td class="who"><span class="dot lan"></span>Red de casa, 8080</td></tr>
+          <tr><td>Uptime Kuma<br><code>louislam/uptime-kuma</code></td><td>Comprueba que cada servicio responde y avisa si cae.</td><td class="who"><span class="dot lan"></span>Red de casa, 3001</td></tr>
+          <tr><td>Fail2ban<br><code>crazymax/fail2ban</code></td><td>Banea las IP que intentan entrar por SSH a la fuerza.</td><td class="who"><span class="dot in"></span>Red del host</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="field">
+    <section id="arquitectura" class="wrap">
+      <div class="arch-head">
+        <h2 class="rise">Desde fuera hay una sola puerta</h2>
+        <p class="body rise" style="--i:1">Desde internet solo se llega a WireGuard. Para administrar desde fuera, primero entro en la VPN con mi clave; el resto de servicios solo existen para la red de casa, y la base de datos ni siquiera para eso.</p>
+      </div>
+      <svg class="diagram rise" style="--i:2" viewBox="0 0 1200 520" role="img" aria-labelledby="dg-t dg-d">
+        <title id="dg-t">Arquitectura de Nexus Node</title>
+        <desc id="dg-d">Internet llega solo a WireGuard por el puerto 51820/UDP. Desde la red de casa se llega al gateway Nginx (80), Adminer (8080), Dozzle (8888) y Uptime Kuma (3001). Dentro de la red de Docker, el gateway pasa a Web-Core y Dozzle, y Adminer y Uptime Kuma llegan a MariaDB, que no publica puerto. Fail2ban vigila el SSH del host.</desc>
+        <!-- columnas: fuera, maquina nexus -->
+        <rect x="0" y="0" width="220" height="520" fill="#0f1110"/>
+        <text x="24" y="44" font-size="22" font-weight="700">Internet</text>
+        <rect x="24" y="200" width="172" height="76" fill="#20241f"/>
+        <text x="40" y="232" font-size="18" font-weight="700">Mi portátil</text>
+        <text x="40" y="258" font-size="15" fill="#b4b8b0">fuera de casa</text>
+
+        <rect x="250" y="0" width="950" height="520" fill="#0f1110"/>
+        <text x="274" y="44" font-size="22" font-weight="700">Máquina nexus · 192.168.0.105</text>
+        <text x="274" y="70" font-size="15" fill="#b4b8b0">Ubuntu 24.04 · Docker Compose V2</text>
+
+        <!-- red de docker -->
+        <rect x="560" y="100" width="616" height="396" fill="#171a18"/>
+        <text x="584" y="132" font-size="16" font-weight="700" fill="#b4b8b0">Red interna de Docker</text>
+
+        <!-- wireguard -->
+        <rect x="274" y="196" width="230" height="84" fill="#5cdd8b"/>
+        <text x="292" y="232" font-size="19" font-weight="800" fill="#0b1a10">WireGuard</text>
+        <text x="292" y="258" font-size="15" fill="#0b1a10">51820/UDP · única puerta</text>
+        <path class="flow" d="M196 238 H274" stroke="#5cdd8b" stroke-width="3" fill="none"/>
+        <path class="flow" d="M504 238 C544 238 544 188 584 188" stroke="#5cdd8b" stroke-width="3" fill="none"/>
+
+        <!-- fail2ban -->
+        <rect x="274" y="392" width="230" height="84" fill="#20241f"/>
+        <text x="292" y="428" font-size="19" font-weight="700">Fail2ban</text>
+        <text x="292" y="454" font-size="15" fill="#b4b8b0">vigila el SSH del host</text>
+
+        <!-- servicios con puerto en la LAN -->
+        <g font-size="15">
+          <rect x="584" y="156" width="200" height="64" fill="#20241f"/><text x="600" y="184" font-size="18" font-weight="700">Gateway</text><text x="600" y="206" fill="#e2c35b">Nginx · 80</text>
+          <rect x="584" y="236" width="200" height="64" fill="#20241f"/><text x="600" y="264" font-size="18" font-weight="700">Adminer</text><text x="600" y="286" fill="#e2c35b">8080</text>
+          <rect x="584" y="316" width="200" height="64" fill="#20241f"/><text x="600" y="344" font-size="18" font-weight="700">Uptime Kuma</text><text x="600" y="366" fill="#e2c35b">3001</text>
+          <rect x="584" y="396" width="200" height="64" fill="#20241f"/><text x="600" y="424" font-size="18" font-weight="700">Dozzle</text><text x="600" y="446" fill="#e2c35b">8888 · con login</text>
+
+          <rect x="952" y="156" width="200" height="64" fill="#20241f"/><text x="968" y="184" font-size="18" font-weight="700">Web-Core</text><text x="968" y="206" fill="#b4b8b0">sin puerto</text>
+          <rect x="952" y="276" width="200" height="84" fill="#20241f"/><text x="968" y="306" font-size="18" font-weight="700">MariaDB</text><text x="968" y="328" fill="#b4b8b0">sin puerto</text><text x="968" y="348" fill="#b4b8b0">solo db:3306 dentro</text>
+          <rect x="952" y="396" width="200" height="64" fill="#20241f"/><text x="968" y="424" font-size="18" font-weight="700">Socket de Docker</text><text x="968" y="446" fill="#b4b8b0">logs para Dozzle</text>
+        </g>
+        <g stroke="#5a6058" stroke-width="2.5" fill="none">
+          <path class="flow" d="M784 188 H952"/>
+          <path class="flow" d="M784 268 C870 268 870 310 952 310"/>
+          <path class="flow" d="M784 348 C870 348 870 326 952 326"/>
+          <path class="flow" d="M784 428 H952"/>
+          <path class="flow" d="M784 204 C860 204 860 412 784 412" stroke="#3d423b"/>
+        </g>
+      </svg>
+      <p class="legend"><span><span class="dot net"></span>Abierto a internet</span><span><span class="dot lan"></span>Solo red de casa</span><span><span class="dot in"></span>Sin puerto publicado</span></p>
+    </section>
+  </div>
+
+  <section id="auditoria" class="wrap">
+    <div class="audit-head">
+      <h2 class="rise">Lo audité como si fuera de otro</h2>
+      <p class="body rise" style="--i:1">Cinco meses después de montarlo, abrí el repositorio buscando fallos en vez de cosas que añadir. Tardé diez minutos en encontrar tres. Cambia entre antes y después para ver qué quedaba expuesto.</p>
+    </div>
+
+    <input type="radio" name="estado" id="antes">
+    <input type="radio" name="estado" id="despues" checked>
+    <div class="toggle" role="group" aria-label="Estado del servidor">
+      <label for="antes">Antes de la auditoría</label>
+      <label for="despues">Después</label>
+    </div>
+
+    <div class="state">
+      <div class="panel">
+        <p class="big"><span class="v-antes bad">3 fallos</span><span class="v-despues ok">3 arreglados</span></p>
+        <ul class="ports">
+          <li><b>Repo</b><span><span class="v-antes bad">La contraseña de root de MariaDB, en texto plano en GitHub.</span><span class="v-despues">Contraseñas en un <code>.env</code> que no se sube. Contraseña antigua cambiada.</span></span></li>
+          <li><b>3306</b><span><span class="v-antes bad">MariaDB abierta a toda la red de casa.</span><span class="v-despues">Cerrado. Solo Adminer y Uptime Kuma llegan, por dentro de Docker.</span></span></li>
+          <li><b>8888</b><span><span class="v-antes bad">Dozzle sin login: cualquiera en la red leía los logs de todo.</span><span class="v-despues">Dozzle pide usuario y contraseña.</span></span></li>
+          <li><b>51820</b><span>WireGuard, la única puerta a internet. Sin cambios.</span></li>
+        </ul>
+      </div>
+<pre class="v-antes" aria-label="docker-compose.yml antes de la auditoría"><span class="com"># docker-compose.yml, antes</span>
+  db:
+    image: mariadb:latest
+    environment:
+<span class="del">      MYSQL_ROOT_PASSWORD: root_password_segura</span>
+      MYSQL_DATABASE: homelab_db
+<span class="del">    ports:
+      - "3306:3306"</span>
+
+  dozzle:
+    image: amir20/dozzle:latest
+<span class="del">    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock</span>
+    ports:
+      - "8888:8080"</pre>
+<pre class="v-despues" aria-label="docker-compose.yml después de la auditoría"><span class="com"># docker-compose.yml, después</span>
+  db:
+    image: mariadb:latest
+    environment:
+<span class="add">      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en .env}</span>
+      MYSQL_DATABASE: homelab_db
+<span class="add">    # Sin puerto publicado: solo se llega por db:3306</span>
+
+  dozzle:
+    image: amir20/dozzle:latest
+<span class="add">    environment:
+      - DOZZLE_AUTH_PROVIDER=simple
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/dozzle:/data</span>
+    ports:
+      - "8888:8080"</pre>
+    </div>
+
+    <div class="fixes">
+      <div class="rise">
+        <h3>La contraseña en GitHub</h3>
+        <p>Estaba escrita en el <code>docker-compose.yml</code> público. La pasé a un <code>.env</code> que Git ignora, con una plantilla <code>.env.example</code>, y Compose se niega a arrancar si falta.</p>
+        <p>Y la cambié en el servidor: borrarla del archivo no la borra del historial de Git.</p>
+      </div>
+      <div class="rise" style="--i:1">
+        <h3>Un puerto que nadie usaba</h3>
+        <p>MariaDB publicaba el 3306 a toda la red, pero solo la usan Adminer y Uptime Kuma, que están en la misma red de Docker. Quité el puerto y el monitor ahora apunta a <code>db:3306</code>.</p>
+      </div>
+      <div class="rise" style="--i:2">
+        <h3>Logs sin candado</h3>
+        <p>Dozzle lee el socket de Docker y no pedía login. Ahora usa autenticación simple, con los usuarios en un archivo fuera de Git.</p>
+      </div>
+    </div>
+    <p class="note rise">Tenía Fail2ban vigilando el SSH mientras la contraseña de la base de datos estaba en GitHub. Protegía la puerta y había dejado la llave colgada fuera.</p>
+  </section>
+
+  <section id="decisiones" class="wrap">
+    <h2 class="rise">Por qué está hecho así</h2>
+    <div class="qa">
+      <div class="rise">
+        <h3>¿Por qué una VPN y no abrir puertos?</h3>
+        <p class="body">Una sola puerta, cifrada y con clave. WireGuard no contesta a quien no tiene una clave válida, así que desde fuera el puerto ni siquiera parece abierto.</p>
+      </div>
+      <div class="rise" style="--i:1">
+        <h3>¿Por qué Docker Compose?</h3>
+        <p class="body">El servidor entero cabe en un archivo de texto con historial. Si rompo algo, vuelvo al commit anterior; si cambio de máquina, copio el repo y el <code>.env</code>.</p>
+      </div>
+      <div class="rise">
+        <h3>¿Por qué Fail2ban con lista blanca?</h3>
+        <p class="body">Cinco intentos fallidos en diez minutos y la IP queda baneada una hora. La red de casa y la de la VPN están en la lista blanca, para no dejarme fuera a mí mismo.</p>
+      </div>
+      <div class="rise" style="--i:1">
+        <h3>¿Por qué el login en Dozzle importa tanto?</h3>
+        <p class="body">Tener el socket de Docker es casi tener la máquina. Montarlo en solo lectura no basta, porque la API sigue aceptando órdenes; por eso la protección de verdad es que nadie entre sin contraseña.</p>
+      </div>
+      <div class="rise">
+        <h3>¿Qué está automatizado?</h3>
+        <p class="body">Un playbook de Ansible crea los usuarios y prohíbe el login de root por SSH. Un script en Python lee la API de Uptime Kuma y guarda un histórico del estado de cada servicio.</p>
+      </div>
+      <div class="rise" style="--i:1">
+        <h3>¿Y la revisión del código?</h3>
+        <p class="body">Cada push pasa por GitHub Actions: valida el <code>docker-compose.yml</code>, revisa los scripts con ShellCheck y busca secretos con Gitleaks antes de que lleguen al repositorio público.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="despliegue" class="wrap deploy">
+    <div>
+      <h2 class="rise">Levántalo en tu máquina</h2>
+      <p class="body rise" style="--i:1">Hace falta Linux con Docker y el plugin de Compose. Las contraseñas no están en el repo: las pones tú en el <code>.env</code>.</p>
+      <p class="body soft rise" style="--i:2">El usuario de Dozzle para entrar es <code>admin</code>; el nombre que pasas con <code>--name</code> es solo el que se muestra.</p>
+    </div>
+<pre class="rise" style="--i:1" aria-label="Comandos de despliegue">git clone https://github.com/ivanvivartirado/nexus-node.git
+cd nexus-node
+
+<span class="com"># Contraseñas y variables (el .env no se sube a Git)</span>
+cp .env.example .env
+nano .env
+
+<span class="com"># Usuario para entrar en Dozzle</span>
+mkdir -p data/dozzle
+docker run --rm amir20/dozzle generate admin \
+  --password 'TU_CONTRASEÑA' --name 'Tu nombre' \
+  > data/dozzle/users.yml
+
+<span class="com"># Todo en marcha</span>
+docker compose up -d
+docker compose ps</pre>
+  </section>
+
+  <section id="pendiente" class="wrap">
+    <h2 class="rise">Lo que todavía falta</h2>
+    <p class="body rise" style="--i:1;margin-top:24px">Un servidor nunca está terminado. Esto es lo siguiente de la lista, en orden.</p>
+    <div class="todo">
+      <div class="rise"><h3>Fijar las versiones</h3><p>Las imágenes usan <code>:latest</code>. Fijar cada versión evita que una actualización rompa algo sin avisar.</p></div>
+      <div class="rise" style="--i:1"><h3>Copias de seguridad</h3><p>Volcado diario de MariaDB y copia de <code>./data</code> fuera de la máquina, con una restauración probada.</p></div>
+      <div class="rise"><h3>Un proxy para el socket</h3><p>Que Dozzle hable con un proxy que solo permita leer logs, en vez de con el socket de Docker directamente.</p></div>
+      <div class="rise" style="--i:1"><h3>HTTPS en la red de casa</h3><p>Certificados para el gateway, para que ni siquiera dentro de la LAN viajen contraseñas sin cifrar.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="who-name">Ivan Vivar Tirado</p>
+    <p class="lead" style="margin-top:24px;max-width:40ch">Técnico de sistemas y soporte IT. Estudio 2º de ASIX en Santa Coloma de Gramenet y monto en casa lo que luego uso en el trabajo.</p>
+    <div class="row">
+      <nav aria-label="Contacto">
+        <a href="https://www.linkedin.com/in/ivanvivartirado/">LinkedIn</a>
+        <a href="https://github.com/ivanvivartirado">GitHub</a>
+        <a href="https://ivanvivartirado.github.io">Portfolio</a>
+        <a href="mailto:ivaanv23@gmail.com?subject=Nexus%20Node">ivaanv23@gmail.com</a>
+      </nav>
+      <span>Nexus Node · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!('IntersectionObserver' in window) || reduce) return;
+  document.documentElement.classList.add('js');
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.rise').forEach(function (el) { io.observe(el); });
+  // la captura del panel se acerca un poco al bajar
+  var img = document.getElementById('panel');
+  window.addEventListener('scroll', function () {
+    var r = img.getBoundingClientRect(), h = window.innerHeight;
+    var p = Math.min(1, Math.max(0, (h - r.top) / (h + r.height)));
+    img.style.transform = 'scale(' + (1 + p * 0.06) + ')';
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
