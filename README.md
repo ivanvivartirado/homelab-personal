@@ -37,10 +37,10 @@ Utilizo un modelo de arquitectura distribuida para garantizar la observabilidad 
 | **Gateway (Nginx)** | Punto de entrada principal y reverse proxy | 80 |
 | **Web-Core** | Dashboard de control y CV profesional | interno |
 | **WireGuard** | Servidor VPN para acceso remoto seguro | 51820/UDP |
-| **Dozzle** | Monitorización de logs en tiempo real (con login) | 8888 |
+| **Dozzle** | Monitorización de logs en tiempo real (con login) | 8888, solo en el host |
 | **MariaDB** | Base de datos relacional | interno |
-| **Adminer** | Gestión visual de base de datos | 8080 |
-| **Uptime Kuma** | Monitorización de servicios y uptime | 3001 |
+| **Adminer** | Gestión visual de base de datos | 8080, solo en el host |
+| **Uptime Kuma** | Monitorización de servicios y uptime | 3001, solo en el host |
 | **Fail2ban** | Protección contra fuerza bruta (contenedor) | — |
 
 ## 🛡️ Seguridad y Hardening
@@ -53,6 +53,9 @@ La infraestructura ha sido securizada siguiendo estándares de administración d
 - **Fail2ban:** Protección activa contra fuerza bruta desplegada como contenedor Docker.
 - **Secretos fuera del repo:** las contraseñas viven en un `.env` que no se sube a Git (plantilla en `.env.example`).
 - **Superficie mínima:** MariaDB no publica puerto; solo se llega a ella desde la red interna de Docker.
+- **Paneles solo por la VPN:** Adminer, Dozzle y Uptime Kuma escuchan en `127.0.0.1`. Se llega a ellos por WireGuard o con un túnel SSH, nunca directamente desde la red.
+- **Versiones fijadas:** ninguna imagen usa `:latest`. Dependabot abre un PR cada semana si hay versión nueva y el CI la revisa antes de aplicarla.
+- **Copias cifradas con restauración probada:** restic guarda cada noche un volcado de MariaDB y los datos de los servicios; un segundo script restaura la última copia en un MariaDB desechable y comprueba que está completa.
 - **Dozzle con login:** tiene acceso al socket de Docker, que equivale a controlar la máquina (montarlo como `:ro` no limita la API), así que pide usuario y contraseña.
 - **Revisión automática:** cada push pasa por GitHub Actions: valida el `docker-compose.yml`, revisa los scripts con ShellCheck y busca secretos con Gitleaks.
 
@@ -95,6 +98,7 @@ La infraestructura ha sido securizada siguiendo estándares de administración d
 ├── docs/                     # Web del proyecto (GitHub Pages)
 ├── docker-compose.yml        # Orquestación V2 de contenedores
 ├── .env.example              # Plantilla de variables (el .env real no se sube)
+├── .github/dependabot.yml    # Avisos de versiones nuevas de imágenes y acciones
 ├── .gitignore                # Protección de secretos y configs locales
 ├── .gitleaks.toml            # Reglas del escáner de secretos
 └── README.md                 # Documentación del proyecto
@@ -124,7 +128,7 @@ nano .env
 
 # Crear el usuario de Dozzle
 mkdir -p data/dozzle
-docker run --rm amir20/dozzle generate admin --password 'TU_CONTRASEÑA' --name Ivan > data/dozzle/users.yml
+docker run --rm amir20/dozzle:v11.4.1 generate admin --password 'TU_CONTRASEÑA' --name Ivan > data/dozzle/users.yml
 
 # Levantar todos los servicios en segundo plano
 docker compose up -d
@@ -132,12 +136,42 @@ docker compose up -d
 
 ### 3. Acceso a los servicios
 
-| Servicio | URL |
-|----------|-----|
-| Dashboard | http://192.168.0.105 |
-| Uptime Kuma | http://192.168.0.105:3001 |
-| Dozzle | http://192.168.0.105:8888 |
-| Adminer | http://192.168.0.105:8080 |
+El dashboard está en la red de casa. Los paneles solo escuchan en el propio servidor:
+
+| Servicio | Por la VPN | Con túnel SSH |
+|----------|------------|---------------|
+| Dashboard | http://192.168.0.105 | http://192.168.0.105 |
+| Uptime Kuma | http://uptime-kuma:3001 | http://localhost:3001 |
+| Dozzle | http://dozzle:8080 | http://localhost:8888 |
+| Adminer | http://adminer:8080 | http://localhost:8080 |
+
+Por la VPN, los nombres de los contenedores se resuelven con el DNS de WireGuard (`PEERDNS=auto`). El túnel SSH, desde el portátil:
+
+```bash
+ssh -L 3001:localhost:3001 -L 8888:localhost:8888 -L 8080:localhost:8080 admin@192.168.0.105
+```
+
+### 4. Copias de seguridad
+
+```bash
+# Instalar restic y crear el repositorio de copias (una sola vez)
+sudo apt install restic
+cp scripts/backup.env.example scripts/backup.env
+nano scripts/backup.env
+sudo sh -c 'openssl rand -base64 32 > /root/.restic-nexus && chmod 600 /root/.restic-nexus'
+sudo sh -c 'set -a; . scripts/backup.env; restic init'
+
+# Primera copia y primera prueba de restauración
+sudo scripts/backup.sh
+sudo scripts/probar-restauracion.sh
+```
+
+Programado en el cron de root (`sudo crontab -e`): copia cada noche y prueba de restauración los domingos.
+
+```cron
+0 4 * * * /home/admin/mi-homelab/scripts/backup.sh >> /var/log/nexus-backup.log 2>&1
+30 5 * * 0 /home/admin/mi-homelab/scripts/probar-restauracion.sh >> /var/log/nexus-backup.log 2>&1
+```
 
 ---
 

@@ -19,3 +19,5 @@ venv/
 __pycache__/
 *.log
 push.sh
+scripts/backup.env
+backups/

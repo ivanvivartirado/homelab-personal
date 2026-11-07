@@ -79,6 +79,7 @@ td code{font-family:var(--code);font-size:.85rem;color:var(--soft)}
 .dot.net{background:var(--accent)}
 .dot.lan{background:#e2c35b}
 .dot.in{background:#5a6058}
+.dot.vpn{background:#2f8f55}
 
 /* arquitectura */
 .field{background:var(--step);margin-top:var(--gap);padding-block:clamp(72px,9vw,140px)}
@@ -212,14 +213,14 @@ footer a{text-underline-offset:5px}
       <table>
         <thead><tr><th scope="col">Servicio</th><th scope="col">Para qué sirve</th><th scope="col">Quién llega</th></tr></thead>
         <tbody>
-          <tr><td>WireGuard<br><code>linuxserver/wireguard</code></td><td>VPN para administrar el servidor desde fuera de casa.</td><td class="who"><span class="dot net"></span>Internet, 51820/UDP</td></tr>
-          <tr><td>Gateway<br><code>nginx:alpine</code></td><td>Punto de entrada y proxy inverso hacia el panel y Dozzle.</td><td class="who"><span class="dot lan"></span>Red de casa, 80</td></tr>
-          <tr><td>Web-Core<br><code>nginx:alpine</code></td><td>Sirve el panel de control que ves arriba.</td><td class="who"><span class="dot in"></span>Solo red de Docker</td></tr>
-          <tr><td>Dozzle<br><code>amir20/dozzle</code></td><td>Logs de todos los contenedores en directo, con usuario y contraseña.</td><td class="who"><span class="dot lan"></span>Red de casa, 8888</td></tr>
-          <tr><td>MariaDB<br><code>mariadb</code></td><td>Base de datos relacional del laboratorio.</td><td class="who"><span class="dot in"></span>Solo red de Docker</td></tr>
-          <tr><td>Adminer<br><code>adminer</code></td><td>Gestión de la base de datos desde el navegador.</td><td class="who"><span class="dot lan"></span>Red de casa, 8080</td></tr>
-          <tr><td>Uptime Kuma<br><code>louislam/uptime-kuma</code></td><td>Comprueba que cada servicio responde y avisa si cae.</td><td class="who"><span class="dot lan"></span>Red de casa, 3001</td></tr>
-          <tr><td>Fail2ban<br><code>crazymax/fail2ban</code></td><td>Banea las IP que intentan entrar por SSH a la fuerza.</td><td class="who"><span class="dot in"></span>Red del host</td></tr>
+          <tr><td>WireGuard<br><code>linuxserver/wireguard:1.0.20260223</code></td><td>VPN para administrar el servidor desde fuera de casa.</td><td class="who"><span class="dot net"></span>Internet, 51820/UDP</td></tr>
+          <tr><td>Gateway<br><code>nginx:1.30-alpine</code></td><td>Punto de entrada y proxy inverso hacia el panel y Dozzle.</td><td class="who"><span class="dot lan"></span>Red de casa, 80</td></tr>
+          <tr><td>Web-Core<br><code>nginx:1.30-alpine</code></td><td>Sirve el panel de control que ves arriba.</td><td class="who"><span class="dot in"></span>Solo red de Docker</td></tr>
+          <tr><td>Dozzle<br><code>amir20/dozzle:v11.4.1</code></td><td>Logs de todos los contenedores en directo, con usuario y contraseña.</td><td class="who"><span class="dot vpn"></span>Solo VPN o SSH</td></tr>
+          <tr><td>MariaDB<br><code>mariadb:12.3</code></td><td>Base de datos relacional del laboratorio.</td><td class="who"><span class="dot in"></span>Solo red de Docker</td></tr>
+          <tr><td>Adminer<br><code>adminer:6.3.0</code></td><td>Gestión de la base de datos desde el navegador.</td><td class="who"><span class="dot vpn"></span>Solo VPN o SSH</td></tr>
+          <tr><td>Uptime Kuma<br><code>louislam/uptime-kuma:1.23.17</code></td><td>Comprueba que cada servicio responde y avisa si cae.</td><td class="who"><span class="dot vpn"></span>Solo VPN o SSH</td></tr>
+          <tr><td>Fail2ban<br><code>crazymax/fail2ban:1.1.1</code></td><td>Banea las IP que intentan entrar por SSH a la fuerza.</td><td class="who"><span class="dot in"></span>Red del host</td></tr>
         </tbody>
       </table>
     </div>
@@ -229,11 +230,11 @@ footer a{text-underline-offset:5px}
     <section id="arquitectura" class="wrap">
       <div class="arch-head">
         <h2 class="rise">Desde fuera hay una sola puerta</h2>
-        <p class="body rise" style="--i:1">Desde internet solo se llega a WireGuard. Para administrar desde fuera, primero entro en la VPN con mi clave; el resto de servicios solo existen para la red de casa, y la base de datos ni siquiera para eso.</p>
+        <p class="body rise" style="--i:1">Desde internet solo se llega a WireGuard. En la red de casa solo responde el gateway con el panel. Adminer, Dozzle y Uptime Kuma escuchan únicamente dentro del servidor: para abrirlos entro por la VPN o con un túnel SSH. La base de datos no tiene puerto en ningún sitio.</p>
       </div>
       <svg class="diagram rise" style="--i:2" viewBox="0 0 1200 520" role="img" aria-labelledby="dg-t dg-d">
         <title id="dg-t">Arquitectura de Nexus Node</title>
-        <desc id="dg-d">Internet llega solo a WireGuard por el puerto 51820/UDP. Desde la red de casa se llega al gateway Nginx (80), Adminer (8080), Dozzle (8888) y Uptime Kuma (3001). Dentro de la red de Docker, el gateway pasa a Web-Core y Dozzle, y Adminer y Uptime Kuma llegan a MariaDB, que no publica puerto. Fail2ban vigila el SSH del host.</desc>
+        <desc id="dg-d">Internet llega solo a WireGuard por el puerto 51820/UDP. Desde la red de casa solo se llega al gateway Nginx (80). Adminer, Uptime Kuma y Dozzle escuchan solo en el propio servidor y se abren desde la VPN o con un túnel SSH. Dentro de la red de Docker, el gateway pasa a Web-Core y Dozzle, y Adminer y Uptime Kuma llegan a MariaDB, que no publica puerto. Fail2ban vigila el SSH del host.</desc>
         <!-- columnas: fuera, maquina nexus -->
         <rect x="0" y="0" width="220" height="520" fill="#0f1110"/>
         <text x="24" y="44" font-size="22" font-weight="700">Internet</text>
@@ -264,9 +265,9 @@ footer a{text-underline-offset:5px}
         <!-- servicios con puerto en la LAN -->
         <g font-size="15">
           <rect x="584" y="156" width="200" height="64" fill="#20241f"/><text x="600" y="184" font-size="18" font-weight="700">Gateway</text><text x="600" y="206" fill="#e2c35b">Nginx · 80</text>
-          <rect x="584" y="236" width="200" height="64" fill="#20241f"/><text x="600" y="264" font-size="18" font-weight="700">Adminer</text><text x="600" y="286" fill="#e2c35b">8080</text>
-          <rect x="584" y="316" width="200" height="64" fill="#20241f"/><text x="600" y="344" font-size="18" font-weight="700">Uptime Kuma</text><text x="600" y="366" fill="#e2c35b">3001</text>
-          <rect x="584" y="396" width="200" height="64" fill="#20241f"/><text x="600" y="424" font-size="18" font-weight="700">Dozzle</text><text x="600" y="446" fill="#e2c35b">8888 · con login</text>
+          <rect x="584" y="236" width="200" height="64" fill="#20241f"/><text x="600" y="264" font-size="18" font-weight="700">Adminer</text><text x="600" y="286" fill="#5cdd8b">solo VPN · 8080</text>
+          <rect x="584" y="316" width="200" height="64" fill="#20241f"/><text x="600" y="344" font-size="18" font-weight="700">Uptime Kuma</text><text x="600" y="366" fill="#5cdd8b">solo VPN · 3001</text>
+          <rect x="584" y="396" width="200" height="64" fill="#20241f"/><text x="600" y="424" font-size="18" font-weight="700">Dozzle</text><text x="600" y="446" fill="#5cdd8b">solo VPN · con login</text>
 
           <rect x="952" y="156" width="200" height="64" fill="#20241f"/><text x="968" y="184" font-size="18" font-weight="700">Web-Core</text><text x="968" y="206" fill="#b4b8b0">sin puerto</text>
           <rect x="952" y="276" width="200" height="84" fill="#20241f"/><text x="968" y="306" font-size="18" font-weight="700">MariaDB</text><text x="968" y="328" fill="#b4b8b0">sin puerto</text><text x="968" y="348" fill="#b4b8b0">solo db:3306 dentro</text>
@@ -280,7 +281,7 @@ footer a{text-underline-offset:5px}
           <path class="flow" d="M784 204 C860 204 860 412 784 412" stroke="#3d423b"/>
         </g>
       </svg>
-      <p class="legend"><span><span class="dot net"></span>Abierto a internet</span><span><span class="dot lan"></span>Solo red de casa</span><span><span class="dot in"></span>Sin puerto publicado</span></p>
+      <p class="legend"><span><span class="dot net"></span>Abierto a internet</span><span><span class="dot lan"></span>Red de casa</span><span><span class="dot vpn"></span>Solo VPN o túnel SSH</span><span><span class="dot in"></span>Sin puerto publicado</span></p>
     </section>
   </div>
 
@@ -386,6 +387,14 @@ footer a{text-underline-offset:5px}
         <h3>¿Y la revisión del código?</h3>
         <p class="body">Cada push pasa por GitHub Actions: valida el <code>docker-compose.yml</code>, revisa los scripts con ShellCheck y busca secretos con Gitleaks antes de que lleguen al repositorio público.</p>
       </div>
+      <div class="rise">
+        <h3>¿Y si se rompe el disco?</h3>
+        <p class="body">Cada noche, restic guarda cifrado un volcado de MariaDB y los datos de los servicios, fuera de la máquina. Los domingos otro script restaura la última copia en un MariaDB desechable y cuenta las tablas: una copia que no se ha probado no cuenta como copia.</p>
+      </div>
+      <div class="rise" style="--i:1">
+        <h3>¿Cómo se actualiza?</h3>
+        <p class="body">Ninguna imagen usa <code>:latest</code>. Cuando sale una versión nueva, Dependabot abre un PR, el CI lo revisa y yo decido cuándo aplicarlo. Nada cambia en el servidor sin quedar en el historial.</p>
+      </div>
     </div>
   </section>
 
@@ -404,7 +413,7 @@ nano .env
 
 <span class="com"># Usuario para entrar en Dozzle</span>
 mkdir -p data/dozzle
-docker run --rm amir20/dozzle generate admin \
+docker run --rm amir20/dozzle:v11.4.1 generate admin \
   --password 'TU_CONTRASEÑA' --name 'Tu nombre' \
   > data/dozzle/users.yml
 
@@ -417,8 +426,8 @@ docker compose ps</pre>
     <h2 class="rise">Lo que todavía falta</h2>
     <p class="body rise" style="--i:1;margin-top:24px">Un servidor nunca está terminado. Esto es lo siguiente de la lista, en orden.</p>
     <div class="todo">
-      <div class="rise"><h3>Fijar las versiones</h3><p>Las imágenes usan <code>:latest</code>. Fijar cada versión evita que una actualización rompa algo sin avisar.</p></div>
-      <div class="rise" style="--i:1"><h3>Copias de seguridad</h3><p>Volcado diario de MariaDB y copia de <code>./data</code> fuera de la máquina, con una restauración probada.</p></div>
+      <div class="rise"><h3>Escanear las imágenes</h3><p>Que el CI busque vulnerabilidades conocidas en cada imagen con Trivy antes de aceptar una versión nueva.</p></div>
+      <div class="rise" style="--i:1"><h3>Healthchecks</h3><p>Que Docker sepa si cada servicio funciona de verdad, no solo si su contenedor ha arrancado.</p></div>
       <div class="rise"><h3>Un proxy para el socket</h3><p>Que Dozzle hable con un proxy que solo permita leer logs, en vez de con el socket de Docker directamente.</p></div>
       <div class="rise" style="--i:1"><h3>HTTPS en la red de casa</h3><p>Certificados para el gateway, para que ni siquiera dentro de la LAN viajen contraseñas sin cifrar.</p></div>
     </div>

@@ -20,7 +20,7 @@ jobs:
         run: docker compose config --quiet
 
       - name: Revisar scripts de shell (ShellCheck)
-        run: shellcheck scripts/crear_usuario.sh scripts/kuma
+        run: shellcheck scripts/crear_usuario.sh scripts/kuma scripts/backup.sh scripts/probar-restauracion.sh
 
       - name: Comprobar que el script de Python compila
         run: python3 -m py_compile scripts/kuma_status.py

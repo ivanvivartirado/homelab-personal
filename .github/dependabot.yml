@@ -1,0 +1,15 @@
+# Dependabot abre un PR cuando sale una versión nueva de una imagen o de una acción.
+# El CI lo revisa antes de aceptarlo; en el servidor se aplica con git pull y docker compose up -d.
+version: 2
+updates:
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

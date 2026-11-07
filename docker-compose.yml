@@ -1,33 +1,36 @@
 services:
   db:
-    image: mariadb:latest
+    image: mariadb:12.3
     container_name: mariadb_homelab
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Define MYSQL_ROOT_PASSWORD en .env}
       MYSQL_DATABASE: homelab_db
+      # Si la versión de los datos es más antigua, la imagen los actualiza al arrancar
+      MARIADB_AUTO_UPGRADE: "1"
     # Sin puerto publicado: solo Adminer y Uptime Kuma llegan por la red interna de Docker (db:3306)
     volumes:
       - ./data/db:/var/lib/mysql
 
   adminer:
-    image: adminer
+    image: adminer:6.3.0
     container_name: adminer_gui
     restart: always
     ports:
-      - "8080:8080"
+      # Solo en el host: se llega por la VPN (http://adminer:8080) o con un túnel SSH
+      - "127.0.0.1:8080:8080"
     depends_on:
       - db
 
   web-core:
-    image: nginx:alpine
+    image: nginx:1.30-alpine
     container_name: web-core
     restart: always
     volumes:
       - ./web:/usr/share/nginx/html:ro
 
   dozzle:
-    image: amir20/dozzle:latest
+    image: amir20/dozzle:v11.4.1
     container_name: dozzle
     restart: always
     environment:
@@ -37,9 +40,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./data/dozzle:/data
     ports:
-      - "8888:8080"
+      # Solo en el host: se llega por la VPN (http://dozzle:8080) o con un túnel SSH
+      - "127.0.0.1:8888:8080"
+
   gateway:
-    image: nginx:alpine
+    image: nginx:1.30-alpine
     container_name: gateway
     restart: always
     ports:
@@ -54,7 +59,7 @@ services:
       - dozzle
 
   wireguard:
-    image: lscr.io/linuxserver/wireguard:latest
+    image: lscr.io/linuxserver/wireguard:1.0.20260223-r0-ls129
     container_name: wireguard
     cap_add:
       - NET_ADMIN
@@ -74,8 +79,9 @@ services:
     ports:
       - "51820:51820/udp"
     restart: always
+
   fail2ban:
-    image: crazymax/fail2ban:latest
+    image: crazymax/fail2ban:1.1.1
     container_name: fail2ban
     restart: always
     network_mode: host
@@ -88,11 +94,13 @@ services:
     environment:
       - TZ=Europe/Madrid
       - F2B_LOG_LEVEL=INFO
+
   uptime-kuma:
-    image: louislam/uptime-kuma:latest
+    image: louislam/uptime-kuma:1.23.17
     container_name: uptime-kuma
     restart: always
     ports:
-      - "3001:3001"
+      # Solo en el host: se llega por la VPN (http://uptime-kuma:3001) o con un túnel SSH
+      - "127.0.0.1:3001:3001"
     volumes:
       - ./data/uptime-kuma:/app/data
